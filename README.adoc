@@ -1,0 +1,93 @@
+= CheckCertificateThumbprint Gravitee Policy
+
+ifdef::env-github[]
+image:https://ci.gravitee.io/buildStatus/icon?job=gravitee-io/check-certificate-thumprint-check-policy/master["Build status", link="https://ci.gravitee.io/job/gravitee-io/job/check-certificate-thumprint-check-policy/"]
+image:https://badges.gitter.im/Join Chat.svg["Gitter", link="https://gitter.im/gravitee-io/gravitee-io?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
+endif::[]
+
+== Phase
+
+[cols="4*", options="header"]
+|===
+^|onRequest
+^|onResponse
+^|onRequestContent
+^|onResponseContent
+
+^.^| X
+^.^| -
+^.^| -
+^.^| -
+
+|===
+
+== Description
+
+This policy check the **x5t#S256** that exist in **access_token**, this is necessary to validate certificate in **OpenBanking Brazil** requirements.
+To get the **x5t#S256** the AS (Authorization Server) needs to support the **Mutual-TLS Client Certificate-Bound Access Tokens**.
+The documentation can be viewed here: https://datatracker.ietf.org/doc/html/rfc8705#section-3
+
+This policy can be very useful in mTLS authentication and can be used to verify if the certificate that create
+access_token is the same certificate that authenticated against you api.
+
+This policy plugin only works in this version with certificate provided by HTTP Header, like **ssl-client-cert**.
+The Header **ssl-client-cert** is a Header that nginx provided after mTLS authentication, the value of this header
+is the certificate string encoded by URLEncode, documentation can be found here: http://nginx.org/en/docs/http/ngx_http_ssl_module.html.
+
+> This is the default value, when is used nginx-controller ingress, this name can be different in your setup.
+
+> This is an initial policy, and a lot of work needs to be done in this code.
+
+== Configuration
+
+|===
+|Property |Required |Description |Type |Default
+
+.^|tokenHeader
+^.^|X
+|Name of the header where we can find the access_token
+^.^|string
+^.^|authorization
+
+.^|certHeader
+^.^|X
+|The name of the header where we can find the urlencoded certificate
+^.^|string
+^.^|ssl-client-cert
+
+.^|errorCode
+^.^|-
+|The error http status code that you want to return when certificate thumbprint do not match.
+^.^|string
+^.^|401
+
+.^|errorMessage
+^.^|-
+|The error message that you want to return when certificate thumbprint do not match.
+^.^|string
+^.^|Certificate not belong to certificate that created this access_token.
+
+|===
+
+== Examples
+
+[source, json]
+----
+"policy-check-certificate-thumbprint": {
+    "tokenHeader": "authorization",
+    "certHeader": "ssl-client-cert"
+}
+----
+
+== Errors
+
+=== Default error
+
+|===
+|Code |Message
+
+.^| ```401```
+| An error occurred when certificate thumbprint do not match.
+
+|===
+
